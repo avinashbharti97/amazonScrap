@@ -21,6 +21,10 @@ class LinkSpider(scrapy.Spider):
             product_url = f"https://www.amazon.in/dp/{asin}"
             yield scrapy.Request(url=product_url, callback=self.parse_product, meta={'asin':asin})
 
+        next_page = response.xpath('//li[@class="a-last"]/a/@href').extract_first()
+        if next_page:
+            url = urljoin("https://www.amazon.in",next_page)
+            yield scrapy.Request(url=url, callback=self.parse)
 
 
         # # follow links to product page
@@ -37,5 +41,36 @@ class LinkSpider(scrapy.Spider):
         asin = response.meta['asin']
         title = response.xpath('//*[@id="productTitle"]/text()').extract_first()
         product_description = response.xpath('//*[@id="productDescription"]/p/text()').extract_first()
-        print(title, product_description)
-        
+        bullet_points = response.xpath('//*[@id="feature-bullets"]//li/span/text()').extract()
+        image = re.search('"large":"(.*?)"',response.text).groups()[0]
+        rating = response.xpath('//*[@id="acrPopover"]/@title').extract_first()
+        number_of_reviews = response.xpath('//*[@id="acrCustomerReviewText"]/text()').extract_first()
+        price = response.xpath('//*[@id="priceblock_ourprice"]/text()').extract_first()
+
+        if not price:
+            price = response.xpath('//*[@data-asin-price]/@data-asin-price').extract_first() or \
+                    response.xpath('//*[@id="price_inside_buybox"]/text()').extract_first()
+        # print(title, product_description, image, rating, number_of_reviews, price, bullet_points)
+        yield {
+                'asin':asin,
+                'Title':title,
+                'Description': product_description,
+                'Bullets': bullet_points,
+                'Image': image,
+                'Rating': rating,
+                'No of Reviews': number_of_reviews,
+                'Price': price
+                }
+       
+
+
+
+
+
+
+
+
+
+
+
+
