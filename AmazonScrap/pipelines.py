@@ -6,8 +6,18 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-
+import re
 
 class AmazonscrapPipeline:
     def process_item(self, item, spider):
+        for k, v in item.items():
+            if not v:
+                item[k]: ''
+            elif k == 'Title':
+                item[k] = v.strip("\n")
+            elif k == 'Description':
+                item[k] == v.strip("\n")
+                item[k] = re.sub(r'[\\u].{5}', '', v) 
+            elif k == 'Price':
+                item[k] = re.sub(r'[\\u].{5}', '', v)
         return item
